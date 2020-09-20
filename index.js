@@ -5,7 +5,9 @@ const store = {
     { id: cuid(), name: 'milk', checked: true },
     { id: cuid(), name: 'bread', checked: false }
   ],
-  hideCheckedItems: false
+  hideCheckedItems: false,
+  itemToEdit: 0,
+  itemToEditName:''
 };
 
 const generateItemElement = function (item) {
@@ -30,10 +32,40 @@ const generateItemElement = function (item) {
     </li>`;
 };
 
+const changeItemName = function(){
+  let itemNew = $(".js-shopping-list-entry").val();
+  let currentSelectedItem = $(".js-drop-down :selected").val();
+  console.log(itemNew);
+  currentSelectedItem = itemNew;
+  console.log(currentSelectedItem);
+  render();
+
+}
 const generateShoppingItemsString = function (shoppingList) {
   const items = shoppingList.map((item) => generateItemElement(item));
   return items.join('');
 };
+
+const generateDropDown = function(shoppingList){
+  const items = store.items.map(item => !item.checked ? `<option value = "${item.id}">${item.name}</option>`:{},[])
+  return items.join('');
+ }
+
+ const handleItemSelected = function(){
+  $(`.js-drop-down`).click(function(){
+    store.itemToEdit = $(this).val();
+  });
+}
+
+const handleEditItemClick = function(){
+   $(`#js-shopping-list-form`).on('click', '#edit',function(e){
+     e.preventDefault();
+     const changeToName = $(`.js-shopping-list-entry`).val();
+     const index = store.items.findIndex(i => i.id == store.itemToEdit);
+     store.items[index].name = changeToName;
+     render();
+   })
+}
 
 /**
  * Render the shopping list in the DOM
@@ -57,10 +89,17 @@ const render = function () {
    * so we send our 'items' into our HTML generation function
    */
   const shoppingListItemsString = generateShoppingItemsString(items);
+  
+  const dropDownString = generateDropDown(items);
+
 
   // insert that HTML into the DOM
   $('.js-shopping-list').html(shoppingListItemsString);
+
+  $('.js-drop-down').html(dropDownString);
 };
+
+
 
 const addItemToShoppingList = function (itemName) {
   store.items.push({ id: cuid(), name: itemName, checked: false });
@@ -70,8 +109,9 @@ const handleNewItemSubmit = function () {
   $('#js-shopping-list-form').submit(function (event) {
     event.preventDefault();
     const newItemName = $('.js-shopping-list-entry').val();
-    $('.js-shopping-list-entry').val('');
+    /*$('.js-shopping-list-entry').val('');*/
     addItemToShoppingList(newItemName);
+    changeItemName();
     render();
   });
 };
@@ -127,6 +167,7 @@ const handleDeleteItemClicked = function () {
   });
 };
 
+
 /**
  * Toggles the store.hideCheckedItems property
  */
@@ -156,10 +197,13 @@ const handleToggleFilterClick = function () {
  */
 const handleShoppingList = function () {
   render();
+  generateDropDown();
   handleNewItemSubmit();
   handleItemCheckClicked();
   handleDeleteItemClicked();
   handleToggleFilterClick();
+  handleItemSelected();
+  handleEditItemClick();
 };
 
 // when the page loads, call `handleShoppingList`
